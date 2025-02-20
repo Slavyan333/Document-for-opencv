@@ -1,0 +1,63 @@
+APP.py
+
+
+from flask import Flask, request, jsonify
+import numpy as np
+from tensorflow import keras
+from PIL import Image
+import io
+import requests
+
+# Укажите путь к вашему изображению
+image_path = 'C:/Users/123/Desktop/Python/lucky/path'  # Замените на путь к вашему изображению
+
+# Открываем файл изображения в бинарном режиме
+with open("path", 'rb') as img:
+    # Отправляем POST-запрос на ваш сервер
+    response = requests.post('http://127.0.0.1:5000/predict', files={'file': img})
+
+# Обрабатываем ответ
+if response.status_code == 200:
+    print('Ответ от сервера:', response.json())
+else:
+    print('Ошибка:', response.status_code, response.text)
+
+app = Flask(__name__)
+
+# Загрузка модели
+model = keras.models.load_model('my_model.h5')  # Убедитесь, что путь правильный
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+        # Проверяем, есть ли файл в запросе
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file part in the request'}), 400
+        
+        file = request.files['file']
+        
+        # Проверяем, что файл не пустой
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+            
+        # Открываем изображение
+        img = Image.open(file.stream)
+        img = img.resize((224, 224))  # Замените на размер, который ожидает ваша модель
+        img_array = np.array(img) / 255.0  # Нормализация
+        input_data = img_array.reshape(1, 224, 224, 3)  # Замените на количество каналов (например, 3 для RGB)
+        
+        print(f"Полученные данные для предсказания: {input_data}")  # Отладочное сообщение
+        
+        # Предсказание
+        prediction = model.predict(input_data)
+        predicted_class = np.argmax(prediction, axis=1)[0]
+        
+        return jsonify({'predicted_class': int(predicted_class)})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
+
+    
