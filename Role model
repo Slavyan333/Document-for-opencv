@@ -1,0 +1,24 @@
+import tensorflow as tf
+Sequential = tf.keras.models.Sequential
+Conv2D = tf.keras.layers.Conv2D
+MaxPooling2D = tf.keras.layers.MaxPooling2D
+Flatten = tf.keras.layers.Flatten
+Dense = tf.keras.layers.Dense
+Dropout = tf.keras.layers.Dropout
+img_height = 150  # Например, высота изображения
+img_width = 150   # Например, ширина изображения
+num_classes = 10
+model = Sequential()
+model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(img_height, img_width, 3)))  # img_height, img_width - размер входных изображений
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(128, (3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Flatten())
+model.add(Dense(128, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(num_classes, activation='softmax'))  # num_classes - количество классов (лиц)
+
+# Компиляция модели
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
