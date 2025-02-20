@@ -1,0 +1,69 @@
+import os
+import numpy as np
+import tensorflow as tf
+
+
+# Импорт необходимых классов
+ImageDataGenerator = tf.keras.preprocessing.image.ImageDataGenerator
+Sequential = tf.keras.models.Sequential
+Dense = tf.keras.layers.Dense
+Conv2D = tf.keras.layers.Conv2D
+Flatten = tf.keras.layers.Flatten
+MaxPooling2D = tf.keras.layers.MaxPooling2D
+
+# Определяем пути к папкам
+train_dir = 'C:/Users/123/Desktop/Python/lucky/train/'
+val_dir = 'C:/Users/123/Desktop/Python/lucky/val/'
+
+# Проверка наличия папок
+if not os.path.exists(train_dir):
+    raise FileNotFoundError(f"Папка с обучающими данными не найдена: {train_dir}")
+
+if not os.path.exists(val_dir):
+    raise FileNotFoundError(f"Папка с валидационными данными не найдена: {val_dir}")
+
+# Подготовка данных
+train_datagen = ImageDataGenerator(rescale=1./255)
+val_datagen = ImageDataGenerator(rescale=1./255)
+
+train_generator = train_datagen.flow_from_directory(
+    train_dir,
+    target_size=(150, 150),  # Измени размер в зависимости от твоих данных
+    batch_size=32,
+    class_mode='binary'  # Или 'categorical', если у тебя более двух классов
+)
+
+val_generator = val_datagen.flow_from_directory(
+    val_dir,
+    target_size=(150, 150),
+    batch_size=32,
+    class_mode='binary'
+)
+
+# Создание модели
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)),
+    MaxPooling2D(pool_size=(2, 2)),
+    Conv2D(64, (3, 3), activation='relu'),  # Добавлен дополнительный слой для улучшения модели
+    MaxPooling2D(pool_size=(2, 2)),
+    Flatten(),
+    Dense(64, activation='relu'),
+    Dense(1, activation='sigmoid')  # Или 'softmax' для нескольких классов
+])
+
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+# Обучение модели
+model.fit(
+    train_generator,
+    epochs=10,
+    validation_data=val_generator
+)
+
+# Сохранение модели
+model.save('my_model.h5')
+
+import os
+
+# Печать текущей директории
+print("Текущая директория:", os.getcwd())
